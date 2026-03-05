@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JavaScript 入門学習だよ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2234;
+    --border: #2a3a5c;
+    --accent: #ffc0f9;
+    --accent2: #7deabc;
+    --accent3: #f74a8a;
+    --text: #e8edf8;
+    --text-muted: #7888aa;
+    --code-bg: #070d1a;;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(74,247,176,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74,247,176,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 256px;
+    flex-shrink: 0;
+    background: #090d14;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    padding: 22px 18px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+
+  .sidebar-title { font-size: 15px; font-weight: 900; }
+
+  .sidebar-progress {
+    padding: 10px 18px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .progress-bar { height: 4px; background: var(--border); margin-bottom: 5px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.5s ease; width: 0%; }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .progress-meta span:last-child { color: var(--accent); }
+
+  .sidebar-nav { flex: 1; padding: 6px 0; }
+
+  .chapter-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .chapter-item:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+  .chapter-item.active { border-left-color: var(--accent); background: rgba(247,201,72,0.06); color: var(--accent); }
+  .chapter-item.done { color: var(--accent2); }
+  .chapter-item.done .ch-num { background: var(--accent2); color: #000; }
+  .chapter-item.active .ch-num { background: var(--accent); color: #000; }
+
+  .ch-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .sidebar-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .score-display { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent); }
+  .score-label { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    min-width: 0;
+    padding: 28px 36px;
+    max-width: 760px;
+  }
+
+  .lesson-header { margin-bottom: 22px; }
+  .lesson-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--accent2); margin-bottom: 6px; }
+  .lesson-title { font-size: clamp(20px, 4vw, 34px); font-weight: 900; letter-spacing: -0.5px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 22px 24px;
+    margin-bottom: 14px;
+    animation: fadeUp 0.3s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .card p  { color: #b0bdd8; line-height: 1.8; font-size: 13.5px; }
+  .card ul { padding-left: 18px; }
+  .card li { color: #b0bdd8; line-height: 1.8; font-size: 13.5px; margin-bottom: 3px; }
+
+  h3.sh { font-size: 13px; font-weight: 700; color: var(--accent2); margin: 14px 0 8px; }
+
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 14px 16px;
+    margin: 12px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.9;
+    white-space: pre;
+    overflow-x: auto;
+    color: #c9d8f8;
+  }
+
+  .kw  { color: #f74a8a; }
+  .str { color: #4af7b0; }
+  .num { color: #f7c948; }
+  .cmt { color: #3d5070; font-style: italic; }
+  .fn  { color: #88aaff; }
+  code.hl { background: rgba(247,201,72,0.15); color: var(--accent); padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  .tip  { border-left: 3px solid var(--accent);  padding: 9px 13px; background: rgba(247,201,72,0.05);  margin: 10px 0; font-size: 12.5px; color: #c0ccdd; line-height: 1.7; }
+  .info { border-left: 3px solid var(--accent2); padding: 9px 13px; background: rgba(74,247,176,0.04); margin: 10px 0; font-size: 12.5px; color: #c0ccdd; line-height: 1.7; }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12.5px; }
+  th { background: var(--surface2); color: var(--accent2); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; padding: 7px 11px; text-align: left; border: 1px solid var(--border); }
+  td { padding: 7px 11px; border: 1px solid var(--border); color: #b0bdd8; font-size: 12.5px; }
+  td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 11.5px; }
+
+  /* Section tabs */
+  .section-tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .stab { padding: 7px 14px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; }
+  .stab:hover { color: var(--text); }
+  .stab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .section-content { display: none; }
+  .section-content.active { display: block; animation: fadeUp 0.25s ease; }
+
+  /* Quiz */
+  .quiz-wrap { background: var(--surface2); border: 1px solid var(--border); padding: 18px 20px; margin-bottom: 12px; }
+  .quiz-num { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--accent3); margin-bottom: 7px; }
+  .quiz-q { font-size: 14px; font-weight: 700; line-height: 1.6; margin-bottom: 13px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+  .qopt { padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 13px; text-align: left; cursor: pointer; transition: all 0.15s; }
+  .qopt:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .qopt.correct { border-color: var(--accent2); background: rgba(74,247,176,0.08); color: var(--accent2); }
+  .qopt.wrong   { border-color: var(--accent3); background: rgba(247,74,138,0.08); color: var(--accent3); }
+  .quiz-feedback { padding: 9px 13px; font-size: 12.5px; font-weight: 700; display: none; line-height: 1.6; }
+  .quiz-feedback.show { display: block; animation: fadeUp 0.2s ease; }
+  .quiz-feedback.ok { background: rgba(74,247,176,0.08); border: 1px solid rgba(74,247,176,0.3); color: var(--accent2); }
+  .quiz-feedback.ng { background: rgba(247,74,138,0.08); border: 1px solid rgba(247,74,138,0.3); color: var(--accent3); }
+
+  /* Coding */
+  .coding-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; margin-bottom: 12px; }
+  .coding-prompt { font-size: 13px; color: #b0bdd8; margin-bottom: 12px; line-height: 1.7; }
+  .code-editor { width: 100%; min-height: 100px; background: var(--code-bg); border: 1px solid var(--border); border-left: 3px solid var(--accent2); color: #c9d8f8; font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 12px; resize: vertical; outline: none; line-height: 1.9; transition: border-color 0.2s; }
+  .code-editor:focus { border-color: var(--accent2); }
+  .coding-actions { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .btn-run { padding: 8px 18px; background: var(--accent2); color: #000; border: none; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; }
+  .btn-run:hover { background: #6affc0; transform: translateY(-1px); }
+  .btn-hint { padding: 8px 14px; background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; cursor: pointer; transition: all 0.2s; }
+  .btn-hint:hover { border-color: var(--accent); color: var(--accent); }
+  .output-box { background: var(--code-bg); border: 1px solid var(--border); border-left: 3px solid #3d5070; padding: 11px 13px; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; min-height: 36px; color: #5effa0; white-space: pre-wrap; display: none; }
+  .output-box.show { display: block; animation: fadeUp 0.2s ease; }
+  .output-box.err  { color: var(--accent3); border-left-color: var(--accent3); }
+  .coding-feedback { padding: 9px 13px; font-size: 12.5px; font-weight: 700; margin-top: 7px; display: none; line-height: 1.6; }
+  .coding-feedback.show { display: block; animation: fadeUp 0.2s ease; }
+  .coding-feedback.ok { background: rgba(74,247,176,0.08); border: 1px solid rgba(74,247,176,0.3); color: var(--accent2); }
+  .coding-feedback.ng { background: rgba(247,74,138,0.08); border: 1px solid rgba(247,74,138,0.3); color: var(--accent3); }
+
+  /* Nav */
+  .lesson-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+  .btn-nav { padding: 10px 20px; border: 1px solid var(--border); background: transparent; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+  .btn-nav:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .btn-nav:disabled { opacity: 0.25; cursor: not-allowed; }
+  .btn-nav.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .btn-nav.primary:hover { background: #ffd966; }
+
+  /* Complete */
+  .complete-screen { text-align: center; padding: 50px 20px; display: none; }
+  .complete-screen.show { display: block; animation: fadeUp 0.5s ease; }
+  .big-score { font-family: 'JetBrains Mono', monospace; font-size: 80px; font-weight: 700; color: var(--accent); line-height: 1; margin: 14px 0; }
+  .checklist { text-align: left; max-width: 400px; margin: 20px auto; background: var(--surface); border: 1px solid var(--border); padding: 18px 22px; }
+  .checklist h3 { font-size: 11px; color: var(--accent2); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+  .check-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: #b0bdd8; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .check-item:last-child { border-bottom: none; }
+  .check-icon { color: var(--accent2); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+  @media (max-width: 680px) {
+    .sidebar { display: none; }
+    .main { padding: 18px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">JS INTRO</div>
+      <div class="sidebar-title">JavaScript 入門だよ</div>
+    </div>
+    <div class="sidebar-progress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-meta">
+        <span id="progressText">0 / 0</span>
+        <span id="progressPct">0%</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer">
+      <div class="score-display" id="scoreDisplay">0 pt</div>
+      <div class="score-label">現在のスコア</div>
+    </div>
+  </aside>
+
+  <main class="main" id="mainContent">
+    <div id="lessonArea"></div>
+    <div class="complete-screen" id="completeScreen"></div>
+  </main>
+</div>
+
+<script>
+const L = [
+  {
+    tag:'CHAPTER 01', title:'JavaScriptとは',
+    sections:[{
+      label:'概要',
+      html:`
+<p>JavaScriptはWebブラウザで動作するプログラミング言語です。HTML・CSS と組み合わせてWebページに「動き」を加えます。</p>
+<div class="code-block"><span class="cmt">// Webの3つの役割</span>
+HTML  → 構造（何があるか）
+CSS   → 見た目（どう見えるか）
+JS    → 動き（どう動くか）</div>
+<h3 class="sh">実行環境</h3>
+<table>
+  <tr><th>環境</th><th>説明</th></tr>
+  <tr><td>ブラウザ</td><td>Chrome, Firefox, Safari など。誰でもすぐ試せる</td></tr>
+  <tr><td>Node.js</td><td>サーバーサイドで実行。バックエンド開発に使う</td></tr>
+</table>
+<h3 class="sh">コンソールで試す</h3>
+<div class="code-block"><span class="cmt">// Chrome DevTools を開く（F12）→ Console タブ</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Hello, World!"</span>);</div>
+<div class="tip">💡 今すぐ F12 を押してブラウザの Console を開き、<code class="hl">console.log("テスト")</code> と打ってみましょう！</div>`
+    }],
+    quizzes:[
+      {q:'JavaScriptの主な役割は？',options:['Webページの構造を作る','Webページの見た目を整える','Webページに動きをつける','サーバーを管理する'],answer:2,explain:'JSは「動き（インタラクション）」を担当します。構造はHTML、見た目はCSSです。'},
+      {q:'ブラウザでJSをすぐ試す方法は？',options:['VSCodeを開く','DevToolsのConsoleタブ','Nodeをインストール','HTMLファイルを作る'],answer:1,explain:'F12でDevToolsを開き、Consoleタブからすぐ実行できます。'}
+    ],
+    coding:{prompt:'console.log() を使って "Hello, JavaScript!" と自分の名前を出力してみよう',hint:`console.log("Hello, JavaScript!");\nconsole.log("山田太郎");`,check:c=>c.includes('console.log')}
+  },
+  {
+    tag:'CHAPTER 02', title:'変数とデータ型',
+    sections:[
+      {label:'変数宣言',html:`
+<p>変数はデータを入れる「箱」です。JSでは <code class="hl">const</code>・<code class="hl">let</code> を使います。</p>
+<div class="code-block"><span class="cmt">// const: 再代入不可（基本的にこれを使う）</span>
+<span class="kw">const</span> name = <span class="str">"太郎"</span>;
+<span class="kw">const</span> age  = <span class="num">25</span>;
+
+<span class="cmt">// let: 再代入可能</span>
+<span class="kw">let</span> count = <span class="num">0</span>;
+count = <span class="num">1</span>;  <span class="cmt">// OK</span>
+
+<span class="cmt">// var: 古い書き方（使わない）</span>
+<span class="kw">var</span> old = <span class="str">"避ける"</span>;</div>
+<div class="tip">💡 迷ったら <strong>const</strong> を使いましょう。値を変える必要が出たときだけ <strong>let</strong> にします。</div>`},
+      {label:'データ型',html:`
+<div class="code-block"><span class="kw">const</span> str   = <span class="str">"文字列"</span>;          <span class="cmt">// String</span>
+<span class="kw">const</span> num   = <span class="num">42</span>;               <span class="cmt">// Number（整数も小数も同じ型）</span>
+<span class="kw">const</span> flt   = <span class="num">3.14</span>;             <span class="cmt">// Number</span>
+<span class="kw">const</span> bool  = <span class="kw">true</span>;             <span class="cmt">// Boolean</span>
+<span class="kw">const</span> empty = <span class="kw">null</span>;             <span class="cmt">// Null（意図的に空）</span>
+<span class="kw">const</span> undef = <span class="kw">undefined</span>;        <span class="cmt">// Undefined（未定義）</span>
+
+<span class="cmt">// 型の確認</span>
+<span class="kw">typeof</span> <span class="str">"hello"</span>  <span class="cmt">// "string"</span>
+<span class="kw">typeof</span> <span class="num">42</span>       <span class="cmt">// "number"</span>
+<span class="kw">typeof</span> <span class="kw">true</span>     <span class="cmt">// "boolean"</span>
+<span class="kw">typeof</span> {}       <span class="cmt">// "object"</span>
+<span class="kw">typeof</span> []       <span class="cmt">// "object"（配列もobject）</span>
+<span class="kw">typeof</span> <span class="kw">null</span>     <span class="cmt">// "object"（歴史的バグ）</span></div>
+<div class="info">ℹ️ <strong>typeof null === "object"</strong> はJSの有名なバグです。後方互換のため直せないまま残っています。</div>`}
+    ],
+    quizzes:[
+      {q:'値が変わらない変数を宣言するキーワードは？',options:['var','let','const','static'],answer:2,explain:'constは再代入不可の定数宣言です。基本的にconstを使い、必要なときだけletにします。'},
+      {q:'typeof [] の結果は？',options:['"array"','"object"','"list"','"undefined"'],answer:1,explain:'配列はtypeofで "object" が返ります。配列判定にはArray.isArray()を使います。'},
+      {q:'意図的に「値がない」を表すには？',options:['undefined','null','0','""'],answer:1,explain:'nullは意図的に値がないことを示します。undefinedは「まだ値が割り当てられていない」状態です。'}
+    ],
+    coding:{prompt:'const・let を使って名前・年齢を変数に入れ、typeof で型を確認してみよう',hint:`const name = "山田";\nconst age = 25;\nconsole.log(name, age);\nconsole.log(typeof name);\nconsole.log(typeof age);`,check:c=>(c.includes('const')||c.includes('let'))&&c.includes('console.log')}
+  },
+  {
+    tag:'CHAPTER 03', title:'演算子',
+    sections:[
+      {label:'算術・比較',html:`
+<div class="code-block"><span class="cmt">// 算術演算子</span>
+<span class="num">10</span> + <span class="num">3</span>   <span class="cmt">// 13</span>
+<span class="num">10</span> - <span class="num">3</span>   <span class="cmt">// 7</span>
+<span class="num">10</span> * <span class="num">3</span>   <span class="cmt">// 30</span>
+<span class="num">10</span> / <span class="num">3</span>   <span class="cmt">// 3.333...</span>
+<span class="num">10</span> % <span class="num">3</span>   <span class="cmt">// 1（余り）</span>
+<span class="num">10</span> ** <span class="num">2</span>  <span class="cmt">// 100（べき乗）</span>
+
+<span class="cmt">// 比較演算子</span>
+<span class="num">5</span> ==  <span class="str">"5"</span>   <span class="cmt">// true（型変換あり ⚠ 非推奨）</span>
+<span class="num">5</span> === <span class="str">"5"</span>   <span class="cmt">// false（厳密比較 ✅ 推奨）</span>
+<span class="num">5</span> !== <span class="str">"5"</span>   <span class="cmt">// true</span>
+<span class="num">5</span> > <span class="num">3</span>       <span class="cmt">// true</span>
+<span class="num">5</span> >= <span class="num">5</span>      <span class="cmt">// true</span></div>
+<div class="tip">💡 <strong>== ではなく === を使う</strong> のが現代JSのルールです。== は型変換が起き予期せぬバグの原因になります。</div>`},
+      {label:'論理演算子',html:`
+<div class="code-block"><span class="kw">true</span> && <span class="kw">false</span>   <span class="cmt">// false（AND：両方true→true）</span>
+<span class="kw">true</span> || <span class="kw">false</span>   <span class="cmt">// true （OR：どちらかtrue→true）</span>
+!<span class="kw">true</span>           <span class="cmt">// false（NOT：反転）</span>
+
+<span class="cmt">// Nullish coalescing（??）</span>
+<span class="kw">const</span> name = <span class="kw">null</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(name ?? <span class="str">"ゲスト"</span>);  <span class="cmt">// "ゲスト"</span>
+<span class="cmt">// null/undefined のときだけデフォルト値を使う</span></div>
+<div class="info">ℹ️ <code class="hl">??</code> は null か undefined のときだけデフォルト値を返します。0 や "" は「値あり」として通します。</div>`}
+    ],
+    quizzes:[
+      {q:'5 === "5" の結果は？',options:['true','false','エラー','undefined'],answer:1,explain:'===は型も含めた厳密比較。数値5と文字列"5"は型が違うのでfalseです。'},
+      {q:'true && false || true の結果は？',options:['true','false','null','エラー'],answer:0,explain:'&&は||より優先度が高い。(true && false)=false → false || true = true です。'}
+    ],
+    coding:{prompt:'a=15, b=4 を作り、足し算・引き算・余り・べき乗を全部 console.log で確認してみよう',hint:`const a = 15;\nconst b = 4;\nconsole.log(a + b);   // 19\nconsole.log(a - b);   // 11\nconsole.log(a % b);   // 3\nconsole.log(a ** b);  // 50625`,check:c=>c.includes('+')&&c.includes('console.log')}
+  },
+  {
+    tag:'CHAPTER 04', title:'条件分岐',
+    sections:[
+      {label:'if文・三項演算子',html:`
+<div class="code-block"><span class="kw">const</span> age = <span class="num">20</span>;
+
+<span class="kw">if</span> (age >= <span class="num">20</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"成人です"</span>);
+} <span class="kw">else if</span> (age >= <span class="num">18</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"18歳以上です"</span>);
+} <span class="kw">else</span> {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"未成年です"</span>);
+}
+
+<span class="cmt">// 三項演算子（1行で書ける）</span>
+<span class="kw">const</span> status = age >= <span class="num">20</span> ? <span class="str">"成人"</span> : <span class="str">"未成年"</span>;</div>
+<div class="tip">💡 三項演算子は <code class="hl">条件 ? 真の値 : 偽の値</code> の形式。シンプルな条件ならif文より短く書けます。</div>`},
+      {label:'switch文',html:`
+<div class="code-block"><span class="kw">const</span> day = <span class="str">"月"</span>;
+
+<span class="kw">switch</span> (day) {
+  <span class="kw">case</span> <span class="str">"月"</span>:
+  <span class="kw">case</span> <span class="str">"火"</span>:
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"週前半"</span>);
+    <span class="kw">break</span>;
+  <span class="kw">case</span> <span class="str">"金"</span>:
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"花金！"</span>);
+    <span class="kw">break</span>;
+  <span class="kw">default</span>:
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"普通の日"</span>);
+}</div>
+<div class="info">ℹ️ <strong>break を忘れない！</strong> breakがないと次のcaseも実行されてしまいます（フォールスルー）。</div>`}
+    ],
+    quizzes:[
+      {q:'三項演算子 x > 0 ? "正" : "負" で x = -3 のとき結果は？',options:['"正"','"負"','true','false'],answer:1,explain:'-3 > 0 はfalseなので、コロン後の "負" が返ります。'},
+      {q:'switch文でcase処理の後に必要なキーワードは？',options:['return','end','break','stop'],answer:2,explain:'breakがないと次のcaseも続けて実行されます（フォールスルー）。意図的でなければ必ずbreakを書きましょう。'}
+    ],
+    coding:{prompt:'score変数（0〜100）を作り、80以上→"優"、60以上→"良"、それ以外→"可" と出力してみよう',hint:`const score = 75;\nif (score >= 80) {\n  console.log("優");\n} else if (score >= 60) {\n  console.log("良");\n} else {\n  console.log("可");\n}`,check:c=>c.includes('if')&&c.includes('else')&&c.includes('console.log')}
+  },
+  {
+    tag:'CHAPTER 05', title:'ループ',
+    sections:[
+      {label:'for / while',html:`
+<div class="code-block"><span class="cmt">// for ループ（初期値; 継続条件; 更新）</span>
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < <span class="num">5</span>; i++) {
+  <span class="fn">console</span>.<span class="fn">log</span>(i);  <span class="cmt">// 0, 1, 2, 3, 4</span>
+}
+
+<span class="cmt">// while ループ</span>
+<span class="kw">let</span> count = <span class="num">0</span>;
+<span class="kw">while</span> (count < <span class="num">3</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(count);
+  count++;  <span class="cmt">// count = count + 1</span>
+}</div>
+<div class="tip">💡 <code class="hl">i++</code> は i を1増やす省略記法。<code class="hl">i--</code> で1減らせます。</div>`},
+      {label:'for...of / for...in',html:`
+<div class="code-block"><span class="cmt">// for...of（配列向け）</span>
+<span class="kw">const</span> fruits = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"orange"</span>];
+<span class="kw">for</span> (<span class="kw">const</span> fruit <span class="kw">of</span> fruits) {
+  <span class="fn">console</span>.<span class="fn">log</span>(fruit);  <span class="cmt">// apple, banana, orange</span>
+}
+
+<span class="cmt">// for...in（オブジェクトのキー向け）</span>
+<span class="kw">const</span> user = { name: <span class="str">"太郎"</span>, age: <span class="num">25</span> };
+<span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> user) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">\`\${key}: \${user[key]}\`</span>);
+}
+<span class="cmt">// name: 太郎, age: 25</span></div>
+<div class="info">ℹ️ 配列を繰り返すなら <strong>for...of</strong>、オブジェクトのキーを繰り返すなら <strong>for...in</strong> を使います。</div>`}
+    ],
+    quizzes:[
+      {q:'for (let i = 0; i < 4; i++) は何回実行される？',options:['3回','4回','5回','無限'],answer:1,explain:'i が 0,1,2,3 の4回実行されます。i=4 の時は i<4 がfalseになり止まります。'},
+      {q:'配列の要素を一つずつ取り出すのに適したループは？',options:['for...in','for...of','while','do...while'],answer:1,explain:'for...ofは配列（iterable）の要素を順番に取り出すのに最適です。for...inはオブジェクトのキー用です。'}
+    ],
+    coding:{prompt:'for文で1〜10の偶数だけを出力してみよう（% 演算子を使う）',hint:`for (let i = 1; i <= 10; i++) {\n  if (i % 2 === 0) {\n    console.log(i);\n  }\n}`,check:c=>c.includes('for')&&c.includes('%')&&c.includes('console.log')}
+  },
+  {
+    tag:'CHAPTER 06', title:'関数',
+    sections:[
+      {label:'定義方法',html:`
+<p>関数は処理をまとめて名前をつけたもの。何度でも再利用できます。</p>
+<div class="code-block"><span class="cmt">// 関数宣言</span>
+<span class="kw">function</span> <span class="fn">greet</span>(name) {
+  <span class="kw">return</span> <span class="str">\`こんにちは、\${name}さん\`</span>;
+}
+
+<span class="cmt">// アロー関数（推奨）</span>
+<span class="kw">const</span> <span class="fn">greet</span> = (name) => <span class="str">\`こんにちは、\${name}さん\`</span>;
+
+<span class="cmt">// 引数が1つなら () 省略可</span>
+<span class="kw">const</span> <span class="fn">double</span> = x => x * <span class="num">2</span>;
+
+<span class="fn">greet</span>(<span class="str">"太郎"</span>);   <span class="cmt">// "こんにちは、太郎さん"</span>
+<span class="fn">double</span>(<span class="num">5</span>);      <span class="cmt">// 10</span></div>
+<div class="tip">💡 1行アロー関数は <code class="hl">return</code> と <code class="hl">{}</code> を省略できます。現代JSではアロー関数が主流です。</div>`},
+      {label:'デフォルト・残余引数',html:`
+<div class="code-block"><span class="cmt">// デフォルト引数（引数が未指定のとき）</span>
+<span class="kw">const</span> <span class="fn">greet</span> = (name = <span class="str">"ゲスト"</span>) => <span class="str">\`こんにちは、\${name}さん\`</span>;
+<span class="fn">greet</span>();          <span class="cmt">// "こんにちは、ゲストさん"</span>
+<span class="fn">greet</span>(<span class="str">"太郎"</span>);    <span class="cmt">// "こんにちは、太郎さん"</span>
+
+<span class="cmt">// 残余引数（...）: 可変個の引数を配列で受け取る</span>
+<span class="kw">const</span> <span class="fn">sum</span> = (...numbers) => numbers.<span class="fn">reduce</span>((a, b) => a + b, <span class="num">0</span>);
+<span class="fn">sum</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>);  <span class="cmt">// 10</span></div>`}
+    ],
+    quizzes:[
+      {q:'const double = x => x * 2; で double(5) の結果は？',options:['5','10','25','エラー'],answer:1,explain:'x * 2 に x=5 を代入すると10です。1行アロー関数はreturnが省略されています。'},
+      {q:'デフォルト引数の書き方は？',options:['function f(x || 0)','function f(x = 0)','function f(x ?? 0)','function f(default x = 0)'],answer:1,explain:'デフォルト引数は 引数名 = デフォルト値 の形式で書きます。引数が未指定のとき使われます。'}
+    ],
+    coding:{prompt:'2つの数を受け取りその大きい方を返す関数 max(a, b) をアロー関数で書いてみよう',hint:`const max = (a, b) => a > b ? a : b;\nconsole.log(max(5, 3));   // 5\nconsole.log(max(2, 9));   // 9`,check:c=>c.includes('=>')&&c.includes('console.log')}
+  },
+  {
+    tag:'CHAPTER 07', title:'オブジェクトと配列',
+    sections:[
+      {label:'オブジェクト',html:`
+<p><code class="hl">オブジェクト</code> はラベル（キー）付きでデータを管理します。</p>
+<div class="code-block"><span class="kw">const</span> user = {
+  name: <span class="str">"太郎"</span>,
+  age: <span class="num">25</span>,
+  <span class="fn">greet</span>() { <span class="kw">return</span> <span class="str">\`私は\${this.name}です\`</span>; }
+};
+
+user.name        <span class="cmt">// "太郎"（ドット記法）</span>
+user[<span class="str">"age"</span>]     <span class="cmt">// 25（ブラケット記法）</span>
+user.<span class="fn">greet</span>()    <span class="cmt">// "私は太郎です"</span>
+
+<span class="cmt">// 追加・更新・削除</span>
+user.city = <span class="str">"東京"</span>;
+user.age = <span class="num">26</span>;
+<span class="kw">delete</span> user.city;
+
+<span class="cmt">// 分割代入・スプレッド</span>
+<span class="kw">const</span> { name, age } = user;
+<span class="kw">const</span> copy = { ...user };
+<span class="kw">const</span> merged = { ...user, city: <span class="str">"大阪"</span> };</div>`},
+      {label:'配列',html:`
+<div class="code-block"><span class="kw">const</span> fruits = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"orange"</span>];
+
+fruits[<span class="num">0</span>]           <span class="cmt">// "apple"（0始まり！）</span>
+fruits.length       <span class="cmt">// 3</span>
+
+<span class="cmt">// 追加・削除</span>
+fruits.<span class="fn">push</span>(<span class="str">"grape"</span>);    <span class="cmt">// 末尾に追加</span>
+fruits.<span class="fn">unshift</span>(<span class="str">"melon"</span>); <span class="cmt">// 先頭に追加</span>
+fruits.<span class="fn">pop</span>();           <span class="cmt">// 末尾を削除</span>
+fruits.<span class="fn">shift</span>();         <span class="cmt">// 先頭を削除</span>
+
+<span class="cmt">// 検索</span>
+fruits.<span class="fn">includes</span>(<span class="str">"apple"</span>)  <span class="cmt">// true</span>
+fruits.<span class="fn">indexOf</span>(<span class="str">"banana"</span>)  <span class="cmt">// 1</span>
+
+<span class="cmt">// 分割代入・スプレッド</span>
+<span class="kw">const</span> [first, second] = fruits;
+<span class="kw">const</span> more = [...fruits, <span class="str">"kiwi"</span>];</div>
+<div class="tip">💡 インデックスは <strong>0から始まる</strong> ので最初の要素は [0]、2番目は [1] です。</div>`}
+    ],
+    quizzes:[
+      {q:'const arr = ["a","b","c"]; で arr[2] は？',options:['"a"','"b"','"c"','undefined'],answer:2,explain:'インデックスは0始まり。arr[0]="a", arr[1]="b", arr[2]="c" です。'},
+      {q:'オブジェクトの分割代入の正しい構文は？',options:['let [name,age]=user;','let {name,age}=user;','let name=user();','let name,age=user;'],answer:1,explain:'オブジェクトの分割代入は {} を使います。配列の分割代入は [] です。'}
+    ],
+    coding:{prompt:'自分のプロフィールオブジェクト（名前・年齢・趣味の配列）を作り、各値を出力してみよう',hint:`const profile = {\n  name: "山田太郎",\n  age: 25,\n  hobbies: ["読書", "映画", "料理"]\n};\nconsole.log(profile.name);\nconsole.log(profile.age);\nconsole.log(profile.hobbies[0]);`,check:c=>c.includes('{')&&c.includes('[')&&c.includes('console.log')}
+  },
+  {
+    tag:'CHAPTER 08', title:'配列メソッド',
+    sections:[
+      {label:'map / filter / find',html:`
+<p>配列をスマートに操作する <code class="hl">高階メソッド</code> を覚えましょう。</p>
+<div class="code-block"><span class="kw">const</span> users = [
+  { id: <span class="num">1</span>, name: <span class="str">"太郎"</span>, age: <span class="num">25</span> },
+  { id: <span class="num">2</span>, name: <span class="str">"花子"</span>, age: <span class="num">30</span> },
+  { id: <span class="num">3</span>, name: <span class="str">"次郎"</span>, age: <span class="num">20</span> },
+];
+
+<span class="cmt">// map: 全要素を変換した新配列を返す</span>
+<span class="kw">const</span> names = users.<span class="fn">map</span>(u => u.name);
+<span class="cmt">// ["太郎", "花子", "次郎"]</span>
+
+<span class="cmt">// filter: 条件に合うものだけ抽出</span>
+<span class="kw">const</span> adults = users.<span class="fn">filter</span>(u => u.age >= <span class="num">25</span>);
+<span class="cmt">// [太郎, 花子]</span>
+
+<span class="cmt">// find: 最初の一致を1つ返す</span>
+<span class="kw">const</span> taro = users.<span class="fn">find</span>(u => u.name === <span class="str">"太郎"</span>);
+<span class="cmt">// { id:1, name:"太郎", age:25 }</span></div>
+<div class="tip">💡 map・filter・findは<strong>元の配列を変更しない</strong>（非破壊）ので安全です。</div>`},
+      {label:'reduce / some / sort / chain',html:`
+<div class="code-block"><span class="kw">const</span> numbers = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>];
+
+<span class="cmt">// reduce: 集約（合計など）</span>
+<span class="kw">const</span> total = numbers.<span class="fn">reduce</span>((sum, n) => sum + n, <span class="num">0</span>);  <span class="cmt">// 15</span>
+
+<span class="cmt">// some: いずれかが条件を満たすか</span>
+users.<span class="fn">some</span>(u => u.age >= <span class="num">30</span>);   <span class="cmt">// true</span>
+<span class="cmt">// every: すべてが条件を満たすか</span>
+users.<span class="fn">every</span>(u => u.age >= <span class="num">18</span>);  <span class="cmt">// true</span>
+
+<span class="cmt">// sort: ソート（数値は比較関数必須）</span>
+users.<span class="fn">sort</span>((a, b) => a.age - b.age);  <span class="cmt">// 年齢昇順</span>
+
+<span class="cmt">// チェーン: メソッドをつなげる</span>
+<span class="kw">const</span> result = users
+  .<span class="fn">filter</span>(u => u.age >= <span class="num">20</span>)
+  .<span class="fn">map</span>(u => u.name)
+  .<span class="fn">join</span>(<span class="str">", "</span>);  <span class="cmt">// "太郎, 花子, 次郎"</span></div>`}
+    ],
+    quizzes:[
+      {q:'[1,2,3,4].filter(n => n % 2 === 0) の結果は？',options:['[1, 3]','[2, 4]','[1, 2, 3, 4]','[]'],answer:1,explain:'filterは条件がtrueの要素だけを残します。偶数（% 2 === 0）は 2 と 4 なので [2, 4] です。'},
+      {q:'[1,2,3].map(n => n * 3) の結果は？',options:['[3, 6, 9]','[1, 2, 3]','[3]','9'],answer:0,explain:'mapは各要素を変換した新配列を返します。1×3=3, 2×3=6, 3×3=9 なので [3, 6, 9]。'}
+    ],
+    coding:{prompt:'数値の配列 [3,7,2,9,4,6,1] から5より大きい数だけ取り出して2倍にしてみよう',hint:`const nums = [3, 7, 2, 9, 4, 6, 1];\nconst result = nums\n  .filter(n => n > 5)\n  .map(n => n * 2);\nconsole.log(result); // [14, 18, 12]`,check:c=>c.includes('filter')&&c.includes('map')&&c.includes('console.log')}
+  },
+  {
+    tag:'CHAPTER 09', title:'DOM操作',
+    sections:[
+      {label:'要素の取得・操作',html:`
+<p>DOM（Document Object Model）はHTMLをJSで操作するための仕組みです。</p>
+<div class="code-block"><span class="cmt">// 要素の取得</span>
+<span class="kw">const</span> el  = document.<span class="fn">querySelector</span>(<span class="str">"#myId"</span>);    <span class="cmt">// ID</span>
+<span class="kw">const</span> el2 = document.<span class="fn">querySelector</span>(<span class="str">".myClass"</span>); <span class="cmt">// クラス</span>
+<span class="kw">const</span> els = document.<span class="fn">querySelectorAll</span>(<span class="str">".item"</span>); <span class="cmt">// 複数</span>
+
+<span class="cmt">// テキスト・HTML</span>
+el.textContent = <span class="str">"新しいテキスト"</span>;
+el.innerHTML   = <span class="str">"&lt;strong&gt;太字&lt;/strong&gt;"</span>;
+
+<span class="cmt">// クラス操作</span>
+el.classList.<span class="fn">add</span>(<span class="str">"active"</span>);
+el.classList.<span class="fn">remove</span>(<span class="str">"active"</span>);
+el.classList.<span class="fn">toggle</span>(<span class="str">"active"</span>);
+
+<span class="cmt">// スタイル</span>
+el.style.color   = <span class="str">"red"</span>;
+el.style.display = <span class="str">"none"</span>;</div>`},
+      {label:'要素の作成・イベント',html:`
+<div class="code-block"><span class="cmt">// 要素の作成・追加・削除</span>
+<span class="kw">const</span> div = document.<span class="fn">createElement</span>(<span class="str">"div"</span>);
+div.textContent = <span class="str">"新しい要素"</span>;
+parent.<span class="fn">appendChild</span>(div);
+element.<span class="fn">remove</span>();
+
+<span class="cmt">// イベントリスナー</span>
+<span class="kw">const</span> btn = document.<span class="fn">querySelector</span>(<span class="str">"#btn"</span>);
+btn.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, (event) => {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"クリックされた"</span>, event.target);
+});
+
+<span class="cmt">// フォーム送信</span>
+form.<span class="fn">addEventListener</span>(<span class="str">"submit"</span>, (e) => {
+  e.<span class="fn">preventDefault</span>();  <span class="cmt">// ページリロードを防ぐ</span>
+  <span class="kw">const</span> val = document.<span class="fn">querySelector</span>(<span class="str">"input"</span>).value;
+});
+
+<span class="cmt">// よく使うイベント</span>
+<span class="cmt">// "click" "input" "submit" "keydown" "DOMContentLoaded"</span></div>
+<div class="tip">💡 <code class="hl">e.preventDefault()</code> でブラウザのデフォルト動作（フォーム送信のリロード等）を防げます。</div>`}
+    ],
+    quizzes:[
+      {q:'CSSクラスを追加・削除・切り替えできるAPIは？',options:['element.class.add/remove','element.classList.add/remove/toggle','element.style.class','element.addCSS()'],answer:1,explain:'classList.add(), classList.remove(), classList.toggle() でクラスを操作します。'},
+      {q:'フォーム送信時にページのリロードを防ぐには？',options:['event.stop()','event.preventDefault()','event.cancel()','return null'],answer:1,explain:'e.preventDefault() でブラウザのデフォルト動作を防ぎます。フォーム送信のリロードを止めるときに必須です。'}
+    ],
+    coding:{prompt:'querySelector と addEventListener の基本構造を正しく書いてみよう（DOM操作の骨格）',hint:`// DOM操作の基本構造\nconst btn = document.querySelector("#btn");\nbtn.addEventListener("click", (e) => {\n  console.log("クリックされた:", e.target);\n});\n\n// 要素作成の例\nconst p = document.createElement("p");\np.textContent = "新しいテキスト";\nconsole.log("作成OK:", p.textContent);`,check:c=>c.includes('querySelector')||c.includes('addEventListener')||c.includes('createElement')}
+  },
+  {
+    tag:'CHAPTER 10', title:'非同期処理',
+    sections:[
+      {label:'Promise',html:`
+<p>非同期処理とは、時間のかかる処理（通信・タイマー等）を<strong>待たずに次へ進む</strong>仕組みです。</p>
+<div class="code-block"><span class="cmt">// Promiseを返す関数</span>
+<span class="kw">const</span> <span class="fn">fetchData</span> = () => <span class="kw">new</span> Promise((resolve, reject) => {
+  setTimeout(() => {
+    <span class="kw">const</span> success = <span class="kw">true</span>;
+    <span class="kw">if</span> (success) resolve({ id: <span class="num">1</span>, name: <span class="str">"太郎"</span> });
+    <span class="kw">else</span>         reject(<span class="kw">new</span> Error(<span class="str">"取得失敗"</span>));
+  }, <span class="num">1000</span>);
+});
+
+<span class="cmt">// .then / .catch / .finally</span>
+<span class="fn">fetchData</span>()
+  .<span class="fn">then</span>(data  => <span class="fn">console</span>.<span class="fn">log</span>(data))
+  .<span class="fn">catch</span>(err  => <span class="fn">console</span>.<span class="fn">error</span>(err))
+  .<span class="fn">finally</span>(()  => <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"完了"</span>));</div>`},
+      {label:'async/await・Fetch',html:`
+<div class="code-block"><span class="cmt">// async/await（読みやすい！）</span>
+<span class="kw">const</span> <span class="fn">getData</span> = <span class="kw">async</span> () => {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"/api/users"</span>);
+    <span class="kw">if</span> (!response.ok) <span class="kw">throw new</span> Error(<span class="str">"Error"</span>);
+    <span class="kw">return</span> response.<span class="fn">json</span>();
+  } <span class="kw">catch</span> (error) {
+    <span class="fn">console</span>.<span class="fn">error</span>(<span class="str">"エラー:"</span>, error);
+  }
+};
+
+<span class="cmt">// POST リクエスト</span>
+<span class="kw">const</span> <span class="fn">createUser</span> = <span class="kw">async</span> (user) => {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"/api/users"</span>, {
+    method: <span class="str">"POST"</span>,
+    headers: { <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span> },
+    body: JSON.<span class="fn">stringify</span>(user),
+  });
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+};
+
+<span class="cmt">// 並列処理（Promise.all）</span>
+<span class="kw">const</span> [users, posts] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+  <span class="fn">fetch</span>(<span class="str">"/api/users"</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>()),
+  <span class="fn">fetch</span>(<span class="str">"/api/posts"</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>()),
+]);</div>
+<div class="tip">💡 <code class="hl">await</code> は async 関数の中でのみ使えます。エラー処理は必ず <code class="hl">try/catch</code> で。</div>`}
+    ],
+    quizzes:[
+      {q:'async/awaitでエラーを捕まえるには？',options:['.catch()だけ','try {} catch {}','if (error)','error.handle()'],answer:1,explain:'async/awaitのエラーはtry {} catch (error) {} で捕まえます。.catch()はPromiseチェーンで使います。'},
+      {q:'複数のfetchを並列実行して全完了を待つには？',options:['Promise.race()','Promise.all()','Promise.any()','async.parallel()'],answer:1,explain:'Promise.all() に配列でPromiseを渡すと、全てが完了したタイミングで結果をまとめて受け取れます。'}
+    ],
+    coding:{prompt:'async関数 wait(ms) をPromiseで作り、awaitで1秒待ってからメッセージを出してみよう',hint:`const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));\n\nconst main = async () => {\n  console.log("開始");\n  await wait(1000);\n  console.log("1秒後！");\n};\n\nmain();`,check:c=>c.includes('async')&&c.includes('await')&&c.includes('Promise')}
+  },
+  {
+    tag:'CHAPTER 11', title:'モダンJS構文',
+    sections:[
+      {label:'テンプレートリテラル・分割代入',html:`
+<div class="code-block"><span class="cmt">// テンプレートリテラル（バッククォート）</span>
+<span class="kw">const</span> name = <span class="str">"太郎"</span>, age = <span class="num">25</span>;
+<span class="kw">const</span> msg  = <span class="str">\`名前: \${name}, 年齢: \${age}\`</span>;
+
+<span class="cmt">// 複数行もそのまま書ける</span>
+<span class="kw">const</span> html = <span class="str">\`
+  &lt;div&gt;
+    &lt;h2&gt;\${name}&lt;/h2&gt;
+  &lt;/div&gt;
+\`</span>;
+
+<span class="cmt">// 分割代入（オブジェクト）</span>
+<span class="kw">const</span> user = { name: <span class="str">"太郎"</span>, age: <span class="num">25</span>, city: <span class="str">"東京"</span> };
+<span class="kw">const</span> { name, age } = user;
+<span class="kw">const</span> { name: userName } = user;  <span class="cmt">// 別名で受け取る</span>
+
+<span class="cmt">// 分割代入（配列）</span>
+<span class="kw">const</span> [first, second, ...rest] = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>];
+<span class="cmt">// first:1, second:2, rest:[3,4,5]</span></div>`},
+      {label:'オプショナルチェーン・スプレッド・モジュール',html:`
+<div class="code-block"><span class="cmt">// オプショナルチェーン（?.）</span>
+<span class="kw">const</span> city = user?.address?.city;        <span class="cmt">// undefinedでもエラーにならない</span>
+<span class="kw">const</span> zip  = user?.address?.zip ?? <span class="str">"不明"</span>; <span class="cmt">// nullish coalescing</span>
+
+<span class="cmt">// スプレッド構文（...）</span>
+<span class="kw">const</span> arr2 = [...arr1, <span class="num">4</span>, <span class="num">5</span>];
+<span class="kw">const</span> obj2 = { ...obj1, c: <span class="num">3</span> };
+
+<span class="cmt">// モジュール（export / import）</span>
+<span class="cmt">// utils.js</span>
+<span class="kw">export const</span> <span class="fn">add</span> = (a, b) => a + b;
+<span class="kw">export default function</span> <span class="fn">multiply</span>(a, b) { <span class="kw">return</span> a * b; }
+
+<span class="cmt">// main.js</span>
+<span class="kw">import</span> multiply, { add } <span class="kw">from</span> <span class="str">'./utils.js'</span>;</div>
+<div class="tip">💡 <code class="hl">?.</code> は途中でnull/undefinedに当たるとエラーにならずundefinedを返します。深いオブジェクトへのアクセスに必須！</div>`}
+    ],
+    quizzes:[
+      {q:'user?.address?.city で user が null のとき結果は？',options:['エラーが起きる','null','undefined','""'],answer:2,explain:'オプショナルチェーン?.はnull/undefinedに当たるとエラーを起こさずundefinedを返します。'},
+      {q:'const [a,b,...rest] = [1,2,3,4,5]; で rest は？',options:['[3]','[3,4,5]','[4,5]','5'],answer:1,explain:'...（残余要素）は残りの要素全てを配列として受け取ります。a=1, b=2 の残り [3,4,5] がrestに入ります。'}
+    ],
+    coding:{prompt:'オブジェクトを分割代入で受け取り、オプショナルチェーンで安全にプロパティアクセスしてみよう',hint:`const user = { name: "太郎", address: { city: "東京" } };\nconst noAddr = { name: "花子" };\n\nconst { name } = user;\nconsole.log(name);\nconsole.log(user?.address?.city);    // "東京"\nconsole.log(noAddr?.address?.city);  // undefined (エラーにならない)`,check:c=>c.includes('?.')&&c.includes('console.log')}
+  }
+];
+
+// ── STATE ──
+let cur = 0, score = 0;
+const done = new Set(), scoredQ = new Set(), scoredC = new Set();
+let qAnswered = [];
+
+function init() { buildSidebar(); render(0); }
+
+function buildSidebar() {
+  document.getElementById('sidebarNav').innerHTML = L.map((l,i)=>`
+    <div class="chapter-item ${i===cur?'active':''} ${done.has(i)?'done':''}" onclick="go(${i})">
+      <div class="ch-num">${done.has(i)?'✓':i+1}</div>
+      <span>${l.title}</span>
+    </div>`).join('');
+  const pct = Math.round(done.size/L.length*100);
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressText').textContent = `${done.size} / ${L.length}`;
+  document.getElementById('progressPct').textContent = pct+'%';
+  document.getElementById('scoreDisplay').textContent = score+' pt';
+}
+
+function go(idx) {
+  cur = idx; qAnswered = new Array(L[idx].quizzes.length).fill(false);
+  buildSidebar(); render(idx);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function render(idx) {
+  document.getElementById('completeScreen').classList.remove('show');
+  const l = L[idx];
+  const tabs = l.sections.length > 1
+    ? `<div class="section-tabs">${l.sections.map((s,i)=>`<button class="stab ${i===0?'active':''}" onclick="stab(${i})">${s.label}</button>`).join('')}</div>
+       ${l.sections.map((s,i)=>`<div class="section-content ${i===0?'active':''}" id="sec${i}">${s.html}</div>`).join('')}`
+    : l.sections[0].html;
+
+  const quizHTML = l.quizzes.map((q,qi)=>`
+    <div class="quiz-wrap" id="qw${qi}">
+      <div class="quiz-num">QUIZ ${qi+1} / ${l.quizzes.length}</div>
+      <div class="quiz-q">${q.q}</div>
+      <div class="quiz-options">${q.options.map((o,oi)=>`<button class="qopt" id="qo${qi}_${oi}" onclick="ans(${qi},${oi})">${o}</button>`).join('')}</div>
+      <div class="quiz-feedback" id="qfb${qi}"></div>
+    </div>`).join('');
+
+  document.getElementById('lessonArea').innerHTML = `
+    <div class="lesson-header">
+      <div class="lesson-tag">${l.tag}</div>
+      <div class="lesson-title">${l.title}</div>
+    </div>
+    <div class="card"><div class="card-label">LEARN</div>${tabs}</div>
+    <div class="card" style="background:var(--surface2)"><div class="card-label">QUIZ — 理解度チェック（正解+10pt）</div>${quizHTML}</div>
+    <div class="coding-card">
+      <div class="card-label">CODING CHALLENGE — やってみよう（クリア+20pt）</div>
+      <div class="coding-prompt">${l.coding.prompt}</div>
+      <textarea class="code-editor" id="ce" spellcheck="false" placeholder="ここにコードを書いてみよう..."></textarea>
+      <div class="coding-actions">
+        <button class="btn-run" onclick="run()">▶ 実行する</button>
+        <button class="btn-hint" onclick="hint()">💡 ヒントを見る</button>
+      </div>
+      <div class="output-box" id="ob"></div>
+      <div class="coding-feedback" id="cf"></div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn-nav" onclick="go(${idx-1})" ${idx===0?'disabled':''}>← 前のChapter</button>
+      <button class="btn-nav primary" onclick="next()">${idx===L.length-1?'🎉 全チャプター完了！':'次のChapterへ →'}</button>
+    </div>`;
+  qAnswered = new Array(l.quizzes.length).fill(false);
+}
+
+function stab(i) {
+  document.querySelectorAll('.stab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  document.querySelectorAll('.section-content').forEach((c,j)=>c.classList.toggle('active',j===i));
+}
+
+function ans(qi, sel) {
+  if (qAnswered[qi]) return;
+  qAnswered[qi] = true;
+  const q = L[cur].quizzes[qi];
+  const ok = sel === q.answer;
+  const key = `${cur}-${qi}`;
+  q.options.forEach((_,oi) => {
+    const b = document.getElementById(`qo${qi}_${oi}`);
+    b.disabled = true;
+    if (oi===q.answer) b.classList.add('correct');
+    if (oi===sel && !ok) b.classList.add('wrong');
+  });
+  const fb = document.getElementById(`qfb${qi}`);
+  fb.className = 'quiz-feedback show '+(ok?'ok':'ng');
+  fb.textContent = (ok?'✅ 正解！ ':'❌ 不正解。')+q.explain;
+  if (ok && !scoredQ.has(key)) { scoredQ.add(key); score+=10; buildSidebar(); }
+}
+
+function run() {
+  const code = document.getElementById('ce').value.trim();
+  if (!code) return;
+  const ob = document.getElementById('ob'), cf = document.getElementById('cf');
+  let logs = [];
+  const ol = console.log, oe = console.error;
+  console.log = (...a) => logs.push(a.join(' '));
+  console.error = (...a) => logs.push('[error] '+a.join(' '));
+  ob.className = 'output-box show'; ob.classList.remove('err');
+  try {
+    eval(code);
+    console.log = ol; console.error = oe;
+    ob.textContent = logs.length ? logs.join('\n') : '（出力なし）';
+    if (L[cur].coding.check(code)) {
+      cf.className = 'coding-feedback show ok';
+      cf.textContent = '✅ 素晴らしい！正しいコードが書けています！';
+      done.add(cur);
+      if (!scoredC.has(cur)) { scoredC.add(cur); score+=20; }
+      buildSidebar();
+    } else {
+      cf.className = 'coding-feedback show ng';
+      cf.textContent = '🤔 もう少し！ヒントを参考にしてみてください。';
+    }
+  } catch(e) {
+    console.log = ol; console.error = oe;
+    ob.textContent = '⚠ エラー: '+e.message;
+    ob.classList.add('err');
+    cf.className = 'coding-feedback show ng';
+    cf.textContent = '❌ エラーが出ています。構文を確認してみましょう。';
+  }
+}
+
+function hint() { document.getElementById('ce').value = L[cur].coding.hint; }
+
+function next() {
+  if (cur >= L.length-1) { done.add(cur); buildSidebar(); showComplete(); }
+  else { done.add(cur); go(cur+1); }
+}
+
+function showComplete() {
+  document.getElementById('lessonArea').innerHTML = '';
+  document.getElementById('progressFill').style.width = '100%';
+  const stars = score>=320?'⭐⭐⭐':score>=180?'⭐⭐':'⭐';
+  const msg = score>=320?'完璧です！実務コードが書けるレベルです 🎉':score>=180?'基礎はしっかり身についています！':'あきらめずに再チャレンジしよう！';
+  const checks = ['変数宣言（const, let）を使い分けられる','配列メソッド（map, filter, find）を使える','アロー関数を書ける','DOM操作ができる','イベントリスナーを設定できる','async/awaitで非同期処理を書ける','Fetch APIでAPI通信ができる'];
+  const s = document.getElementById('completeScreen');
+  s.className = 'complete-screen show';
+  s.innerHTML = `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--accent2);margin-bottom:10px">COURSE COMPLETE</div>
+    <div class="big-score">${score}pt</div>
+    <div style="font-size:30px;margin:10px 0;letter-spacing:6px">${stars}</div>
+    <h2 style="font-size:18px;margin-bottom:8px">全 ${L.length} チャプター完了！</h2>
+    <p style="color:var(--text-muted);margin-bottom:22px">${msg}</p>
+    <div class="checklist">
+      <h3>CHECKLIST</h3>
+      ${checks.map(c=>`<div class="check-item"><span class="check-icon">✓</span><span>${c}</span></div>`).join('')}
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
+      <button class="btn-nav" onclick="restart()">もう一度やる</button>
+      <button class="btn-nav primary" onclick="go(0)">最初に戻る</button>
+    </div>`;
+}
+
+function restart() {
+  score=0; done.clear(); scoredQ.clear(); scoredC.clear();
+  document.getElementById('completeScreen').classList.remove('show');
+  go(0);
+}
+
+init();
+</script>
+</body>
+</html>
