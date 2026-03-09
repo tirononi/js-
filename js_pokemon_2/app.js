@@ -72,23 +72,107 @@
 
 // || または　　foo === 1 || foo === 2 など
 
-let isLogin = true;
-if(!isLogin){
-     alert("ログインしてください")
- } else {
-    console.log("ログイン成功中");
- }
+// let isLogin = true;
+// if(!isLogin){
+//      alert("ログインしてください")
+//  } else {
+//     console.log("ログイン成功中");
+//  }
 
-const userType = "member"; //member,admin,owner
-if (userType === "member"){
-    alert("アクセスできません")
-} else if (userType === admin){
-    alert("今から10分だけアクセスできます")
-} else {
-    console.log("アクセス成功");
-}
+// const userType = "member"; //member,admin,owner
+// if (userType === "member"){
+//     alert("アクセスできません")
+// } else if (userType === admin){
+//     alert("今から10分だけアクセスできます")
+// } else {
+//     console.log("アクセス成功");
+// }
 
 
 //関数
+// function 関数名(){
+
+// }
+// const 関数名 = () =>{
+
+// }
+//呼び出し
+// 関数名();
+
+//引数
+// function 関数名(引数) {
+
+// }
+// 関数名(引数名);
 
 
+
+//コールバック
+// function foo(callback){
+//     console.log("hi,tom.");
+//     callback(); //実質bar(); =  console.log("hi,ken");
+// }
+
+// function bar(){
+//     console.log("hi,ken");
+// }
+
+// foo(bar);
+
+
+
+//戻り値
+// function 関数名(){
+//     return 戻り値;
+// }
+//• console.log は、デバッグ（確認）用の 「確認用モニター」。
+//• return は、次の作業へ繋げるための 「出力ポート（コンセント）」。
+//「画面で確認したいだけ」なら log を使い、「その結果を使って何かを続けたい」なら return を使う、と使い分ければ完璧です！
+
+
+
+//スコープ
+// const bar1 = 1;  //グローバル変数
+
+// function foo() {
+//     const bar2 = 2;  //ローカル変数
+//     // console.log(bar2);
+//     return bar2;
+// }
+
+// console.log(bar1);
+// const result = foo(); // 戻り値を result という箱で受け取る
+// console.log(result);
+
+
+
+//オブジェクト
+// const オブジェクト名 ={
+//     プロパティ名:値
+// };
+
+// const snsUser = {
+//     id: 1,
+//     userName: "Taro",
+//     gender: "male",
+//     //メソッド 必ずfunctionでやる
+//     like: function  () {
+//         console.log("like");
+//     },
+//     post: function methodName (arguments) {
+//         // body
+//     }
+// }
+// console.log(snsUser.id);
+// console.log(snsUser.like);
+
+// const snsUser = {
+//     id: 1,
+//     userName: "Taro",
+//     gender: "male",
+//     post: function (contents) {
+//         return contents + "を投稿しました by" + this.userName;
+//     }
+// }
+
+// console.log(snsUser.post("プログラミングなう"));
